@@ -42,7 +42,10 @@ const RobotFace = () => {
       const randomPhrase = SILLY_PHRASES[Math.floor(Math.random() * SILLY_PHRASES.length)];
       
       const utterance = new SpeechSynthesisUtterance(randomPhrase);
-      utterance.rate = 1.3; // Slightly faster
+      
+      // Slower rate for mobile devices, normal rate for desktop
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      utterance.rate = isMobile ? 0.7 : 1.0; // Much slower on mobile
       utterance.pitch = 1.8; // High-pitched
       utterance.volume = 0.8;
       
