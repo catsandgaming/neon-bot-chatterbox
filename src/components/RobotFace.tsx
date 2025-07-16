@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SILLY_PHRASES = [
   "SOCKS ARE GOOD",
@@ -20,9 +20,22 @@ const SILLY_PHRASES = [
 
 const RobotFace = () => {
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [speechEnabled, setSpeechEnabled] = useState(false);
+  const [showTapMessage, setShowTapMessage] = useState(true);
+
+  const enableSpeech = () => {
+    if ('speechSynthesis' in window && !speechEnabled) {
+      // Test speech to enable it on iOS Safari
+      const testUtterance = new SpeechSynthesisUtterance("");
+      window.speechSynthesis.speak(testUtterance);
+      setSpeechEnabled(true);
+      setShowTapMessage(false);
+      speakPhrase();
+    }
+  };
 
   const speakPhrase = () => {
-    if ('speechSynthesis' in window) {
+    if ('speechSynthesis' in window && speechEnabled) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
@@ -39,6 +52,8 @@ const RobotFace = () => {
   };
 
   useEffect(() => {
+    if (!speechEnabled) return;
+    
     const getRandomInterval = () => Math.random() * 10000 + 20000; // 20-30 seconds
     
     let timeout: NodeJS.Timeout;
@@ -51,7 +66,7 @@ const RobotFace = () => {
       }, interval);
     };
 
-    // Start the cycle
+    // Start the cycle only after speech is enabled
     scheduleNextPhrase();
 
     // Cleanup function
@@ -63,11 +78,23 @@ const RobotFace = () => {
         window.speechSynthesis.cancel();
       }
     };
-  }, []);
+  }, [speechEnabled]);
 
   return (
-    <div className="min-h-screen w-full bg-background flex items-center justify-center">
-      <div className="flex items-center gap-24">
+    <div className="min-h-screen w-full bg-background flex items-center justify-center relative">
+      {showTapMessage && (
+        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-neon-blue/20 border border-neon-blue/50 rounded-lg p-4 text-center">
+          <p className="text-foreground text-sm">Tap anywhere to enable robot voice</p>
+        </div>
+      )}
+      
+      <div 
+        className="flex items-center gap-24 cursor-pointer" 
+        onClick={enableSpeech}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && enableSpeech()}
+      >
         {/* Left Eye */}
         <div className="relative">
           <div 
